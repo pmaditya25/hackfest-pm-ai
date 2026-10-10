@@ -18,6 +18,14 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
+## Authentication
+
+The `/login` and `/signup` pages use Supabase Auth. Copy `.env.example` to
+`.env.local` and set `NEXT_PUBLIC_SUPABASE_URL` and
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` from your Supabase project's API settings.
+These public client values are intended for browser use; never put a Supabase
+service-role key in a `NEXT_PUBLIC_` variable.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
