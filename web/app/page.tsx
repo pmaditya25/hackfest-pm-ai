@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { supabase } from "../lib/supabase";
 
 type Persona = {
   name: string;
@@ -45,6 +47,62 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"define" | "test">("define");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [user, setUser] = useState<{ email?: string } | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(Boolean(supabase));
+  const [authError, setAuthError] = useState("");
+  const [signingOut, setSigningOut] = useState(false);
+
+  useEffect(() => {
+    if (!supabase) {
+      return;
+    }
+
+    let isMounted = true;
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isMounted) setUser(session?.user ?? null);
+    });
+
+    void supabase.auth
+      .getSession()
+      .then(({ data, error: authError }) => {
+        if (!isMounted) return;
+        if (authError) {
+          setAuthError("Unable to check your sign-in status. Please refresh.");
+        } else {
+          setUser(data.session?.user ?? null);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setAuthError("Unable to check your sign-in status. Please refresh.");
+        }
+      })
+      .finally(() => {
+        if (isMounted) setCheckingAuth(false);
+      });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  async function handleLogout() {
+    if (!supabase) return;
+
+    setAuthError("");
+    setSigningOut(true);
+    const { error: signOutError } = await supabase.auth.signOut();
+    setSigningOut(false);
+
+    if (signOutError) {
+      setAuthError(signOutError.message);
+      return;
+    }
+    setUser(null);
+  }
 
   async function generateRequirements() {
     if (!product.trim()) {
@@ -84,22 +142,70 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#0b1020] px-5 py-8 text-slate-100 sm:px-8">
       <div className="mx-auto max-w-6xl">
-        <header className="mb-10 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold tracking-[0.25em] text-cyan-400">
-              PRODUCTOS
-            </p>
-            <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
-              From idea to testable requirements.
-            </h1>
-            <p className="mt-3 max-w-2xl text-slate-400">
-              Turn a product idea into structured requirements, user stories,
-              and a traceable test plan.
-            </p>
+        <header className="mb-10">
+          <nav className="mb-12 flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">
+            <Link href="/" className="text-2xl font-bold tracking-tight">
+              Product<span className="text-cyan-400">OS</span>
+            </Link>
+            <div className="flex flex-wrap items-center gap-3">
+              {user ? (
+                <>
+                  <span className="max-w-48 truncate text-sm text-slate-300">
+                    {user.email}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    disabled={signingOut}
+                    className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {signingOut ? "Logging out..." : "Log out"}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="rounded-lg px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-900"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="rounded-lg bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+                  >
+                    Sign up
+                  </Link>
+                </>
+              )}
+            </div>
+          </nav>
+          <div className="flex flex-wrap items-end justify-between gap-5">
+            <div>
+              <p className="text-sm font-semibold tracking-[0.25em] text-cyan-400">
+                AI PRODUCT WORKSPACE
+              </p>
+              <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
+                From idea to testable requirements.
+              </h1>
+              <p className="mt-3 max-w-2xl text-slate-400">
+                Turn a product idea into structured requirements, user stories,
+                and a traceable test plan.
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-300">
+              {checkingAuth
+                ? "Checking sign-in..."
+                : user
+                  ? "Signed in"
+                  : "Welcome to ProductOS"}
+            </div>
           </div>
-          <div className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-300">
-            AI Product Workspace
-          </div>
+          {authError && (
+            <p role="alert" className="mt-4 text-sm text-red-300">
+              {authError}
+            </p>
+          )}
         </header>
 
         <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 sm:p-7">
