@@ -89,6 +89,28 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    const page = document.querySelector(".product-page");
+    if (!page) return;
+
+    page.classList.add("motion-ready");
+    const revealItems = page.querySelectorAll(".reveal");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.16 }
+    );
+
+    revealItems.forEach((item) => observer.observe(item));
+    return () => observer.disconnect();
+  }, []);
+
   async function handleLogout() {
     if (!supabase) return;
 
@@ -140,24 +162,27 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0b1020] px-5 py-8 text-slate-100 sm:px-8">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-10">
-          <nav className="mb-12 flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">
-            <Link href="/" className="text-2xl font-bold tracking-tight">
-              Product<span className="text-cyan-400">OS</span>
-            </Link>
-            <div className="flex flex-wrap items-center gap-3">
+    <main className="product-page">
+      <section className="hero-section">
+        <nav className="site-nav" aria-label="Main navigation">
+          <Link href="/" className="brand-mark" aria-label="ProductOS home">
+            <span className="brand-icon" aria-hidden="true">P</span>
+            <span>Product<span>OS</span></span>
+          </Link>
+          <div className="nav-links">
+            <a href="#principles" className="nav-text-link">Our principles</a>
+            <a href="#workspace" className="nav-text-link">Workspace</a>
+            <div className="nav-auth-links">
               {user ? (
                 <>
-                  <span className="max-w-48 truncate text-sm text-slate-300">
+                  <span className="nav-user">
                     {user.email}
                   </span>
                   <button
                     type="button"
                     onClick={handleLogout}
                     disabled={signingOut}
-                    className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="nav-button nav-button-secondary"
                   >
                     {signingOut ? "Logging out..." : "Log out"}
                   </button>
@@ -166,52 +191,130 @@ export default function Home() {
                 <>
                   <Link
                     href="/login"
-                    className="rounded-lg px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-900"
+                    className="nav-text-link"
                   >
                     Log in
                   </Link>
                   <Link
                     href="/signup"
-                    className="rounded-lg bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+                    className="nav-button"
                   >
                     Sign up
                   </Link>
                 </>
               )}
             </div>
-          </nav>
-          <div className="flex flex-wrap items-end justify-between gap-5">
-            <div>
-              <p className="text-sm font-semibold tracking-[0.25em] text-cyan-400">
-                AI PRODUCT WORKSPACE
-              </p>
-              <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
-                From idea to testable requirements.
-              </h1>
-              <p className="mt-3 max-w-2xl text-slate-400">
-                Turn a product idea into structured requirements, user stories,
-                and a traceable test plan.
-              </p>
+          </div>
+        </nav>
+        <div className="hero-inner">
+          <div className="hero-copy">
+            <p className="eyebrow hero-eyebrow"><span className="status-dot" /> A better way to build what matters</p>
+            <h1>Think in<br /><span>products.</span></h1>
+            <p className="hero-description">
+              Turn real user problems into validated solutions—with the clarity
+              to know what to build, and the confidence to know why.
+            </p>
+            <a className="hero-cta" href="#principles">
+              Explore the principles <span aria-hidden="true">↓</span>
+            </a>
+          </div>
+          <div className="blueprint" aria-label="An animated product thinking diagram">
+            <div className="blueprint-grid" />
+            <div className="blueprint-orbit orbit-one" />
+            <div className="blueprint-orbit orbit-two" />
+            <svg className="blueprint-connections" viewBox="0 0 560 510" fill="none" aria-hidden="true">
+              <path d="M280 255 120 140M280 255 430 115M280 255 465 350M280 255 145 410" />
+              <path d="M120 140 430 115M430 115 465 350M465 350 145 410M145 410 120 140" />
+              <path className="connection-accent" d="M120 140 280 255 465 350" />
+            </svg>
+            <div className="blueprint-center">
+              <span className="center-mark">P</span>
+              <span className="center-label">USER VALUE</span>
+              <span className="center-caption">the outcome we design for</span>
             </div>
-            <div className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-300">
+            <div className="blueprint-node node-problem"><span className="node-number">01</span><span>Problem</span></div>
+            <div className="blueprint-node node-insight"><span className="node-number">02</span><span>Insight</span></div>
+            <div className="blueprint-node node-solution"><span className="node-number">03</span><span>Solution</span></div>
+            <div className="blueprint-node node-evidence"><span className="node-number">04</span><span>Evidence</span></div>
+            <span className="blueprint-coordinate coordinate-top">FIG 01 — PRODUCT LOOP</span>
+            <span className="blueprint-coordinate coordinate-bottom">DISCOVER / DEFINE / VALIDATE</span>
+            <span className="blueprint-crosshair crosshair-one" />
+            <span className="blueprint-crosshair crosshair-two" />
+          </div>
+        </div>
+        <div className="hero-bottom">
+          <span>Good products start with better questions.</span>
+          <span>Scroll to explore <span aria-hidden="true">↓</span></span>
+        </div>
+      </section>
+
+      <section id="principles" className="principles-section">
+        <div className="principles-inner">
+          <div className="principles-heading reveal">
+            <p className="eyebrow">THE PRODUCTOS POINT OF VIEW</p>
+            <h2>The principles behind<br />better products<span>.</span></h2>
+            <p className="principles-intro">
+              Strong products aren’t accidents. They’re the result of asking
+              better questions, making deliberate choices, and learning early.
+            </p>
+          </div>
+          <div className="principles-grid">
+            <article className="principle-card reveal">
+              <span className="principle-number">01 / LISTEN</span>
+              <h3>Start with a real user problem.</h3>
+              <p>Begin with the friction people actually feel—not a solution looking for a problem.</p>
+              <span className="principle-mark" aria-hidden="true">↗</span>
+            </article>
+            <article className="principle-card reveal">
+              <span className="principle-number">02 / FOCUS</span>
+              <h3>Define outcomes before features.</h3>
+              <p>Know what better looks like for people before deciding what to build.</p>
+              <span className="principle-mark" aria-hidden="true">◎</span>
+            </article>
+            <article className="principle-card reveal">
+              <span className="principle-number">03 / CLARIFY</span>
+              <h3>Write clear, testable requirements.</h3>
+              <p>Make intent precise enough that teams can build it—and agree when it works.</p>
+              <span className="principle-mark" aria-hidden="true">⌘</span>
+            </article>
+            <article className="principle-card reveal">
+              <span className="principle-number">04 / LEARN</span>
+              <h3>Validate assumptions with evidence.</h3>
+              <p>Replace confident guesses with small, thoughtful tests and real signals.</p>
+              <span className="principle-mark" aria-hidden="true">↗</span>
+            </article>
+          </div>
+          <a className="principles-continue" href="#workspace">
+            Put the principles into practice <span aria-hidden="true">↓</span>
+          </a>
+        </div>
+      </section>
+
+      <section id="workspace" className="workspace-section">
+        <div className="workspace-inner">
+          <div className="workspace-heading reveal">
+            <div>
+              <p className="eyebrow">THE PRODUCTOS WORKSPACE</p>
+              <h2>From clear thinking<br />to a better brief<span>.</span></h2>
+              <p>Bring an idea. Leave with a direction your team can define and test.</p>
+            </div>
+            <div className="workspace-status">
+              <span className="status-dot" />
               {checkingAuth
                 ? "Checking sign-in..."
                 : user
                   ? "Signed in"
-                  : "Welcome to ProductOS"}
+                  : "Ready when you are"}
             </div>
           </div>
           {authError && (
-            <p role="alert" className="mt-4 text-sm text-red-300">
-              {authError}
-            </p>
+            <p role="alert" className="workspace-alert">{authError}</p>
           )}
-        </header>
 
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 sm:p-7">
+          <section className="generator-card">
           <label
             htmlFor="product"
-            className="mb-3 block text-lg font-semibold"
+            className="generator-label"
           >
             Describe your product idea
           </label>
@@ -222,32 +325,33 @@ export default function Home() {
             placeholder="Example: A smart water bottle that reminds people to drink water and tracks daily hydration..."
             rows={4}
             maxLength={5000}
-            className="w-full resize-y rounded-xl border border-slate-700 bg-slate-950 p-4 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+            className="generator-input"
           />
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs text-slate-500">
+          <div className="generator-meta">
+            <p>
               Describe the users, problem, and what the product should do.
             </p>
-            <p className="text-xs text-slate-500">{product.length}/5000</p>
+            <p>{product.length}/5000</p>
           </div>
 
           <button
             onClick={generateRequirements}
             disabled={loading}
-            className="mt-5 rounded-xl bg-cyan-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+            className="generate-button"
           >
             {loading ? "Generating requirements..." : "Generate requirements"}
+            {!loading && <span aria-hidden="true">↗</span>}
           </button>
 
           {error && (
             <p
               role="alert"
-              className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300"
+              className="generator-error"
             >
               {error}
             </p>
           )}
-        </section>
+          </section>
 
         {analysis && (
           <section className="mt-8">
@@ -454,10 +558,16 @@ export default function Home() {
           </div>
         )}
 
-        <footer className="mt-10 border-t border-slate-800 pt-5 text-center text-xs text-slate-500">
-          ProductOS · Define clearly. Test confidently.
+        <footer className="site-footer">
+          <Link href="/" className="brand-mark">
+            <span className="brand-icon" aria-hidden="true">P</span>
+            <span>Product<span>OS</span></span>
+          </Link>
+          <span>Define clearly. Test confidently.</span>
+          <span>© ProductOS</span>
         </footer>
-      </div>
+        </div>
+      </section>
     </main>
   );
 }
