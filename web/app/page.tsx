@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../lib/supabase";
+import SearchHistory from "./SearchHistory";
 
 type Persona = { name: string; needs: string };
 type Feature = { name: string; priority: string; reason: string };
@@ -64,6 +65,7 @@ function DetailList({ title, items }: { title: string; items: string[] }) {
 
 export default function Home() {
   const [product, setProduct] = useState("");
+  const [historyRefresh, setHistoryRefresh] = useState(0);
   const [isListening, setIsListening] = useState(false);
 const [voiceError, setVoiceError] = useState("");
 
@@ -71,6 +73,7 @@ const startVoiceInput = () => {
   const SpeechRecognitionAPI =
     (window as any).SpeechRecognition ||
     (window as any).webkitSpeechRecognition;
+    
 
   if (!SpeechRecognitionAPI) {
     setVoiceError("Voice input is not supported. Try Chrome or Edge.");
@@ -173,6 +176,20 @@ async function generateRequirements() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Generation failed. Please try again.");
       setAnalysis(data.analysis);
+      if (supabase && user && product.trim()) {
+  const { error: historyError } = await supabase
+    .from("search_history")
+    .insert({
+      user_id: (user as { id: string }).id,
+      query: product.trim(),
+    });
+
+  if (historyError) {
+    console.error("Failed to save search history:", historyError.message);
+  } else {
+    setHistoryRefresh((n) => n + 1);
+  }
+}
       setActiveTab("define");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
@@ -462,6 +479,11 @@ async function generateRequirements() {
           ProductOS · Define clearly. Build deliberately. Test confidently.
         </footer>
       </div>
+      <SearchHistory
+  supabase={supabase}
+  refreshKey={historyRefresh}
+  onSelect={(q) => setProduct(q)}
+/>
     </main>
   );
 }
